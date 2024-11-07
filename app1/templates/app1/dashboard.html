@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Forecasting Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Order Forecasting Dashboard</h1>
+
+    <!-- Time Series Graph -->
+    <div id="time-series-graph" style="width: 35%; height: 300px; display: inline-block;"></div>
+
+    <!-- Parent vs Sub-category Graph -->
+    <div id="parent-subcategory-graph" style="width: 48%; display: inline-block;"></div>
+
+    <script>
+        // Fetch forecast orders data
+        fetch('/forecast_orders/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Debugging output
+                console.log('Forecast Data:', data);  // Check the structure of the data
+
+                // Ensure we have data to plot
+                if (data.length === 0) {
+                    console.error('No data returned for forecast orders');
+                    return;
+                }
+
+                const forecastedOrders = data.map(item => item.forecasted_orders);
+                const forecastDates = data.map(item => item.date);
+                
+                // Plot the time series graph
+                const trace1 = {
+                    x: forecastDates,
+                    y: forecastedOrders,
+                    mode: 'lines+markers',
+                    name: 'Forecasted Orders',
+                };
+                Plotly.newPlot('time-series-graph', [trace1]);
+            })
+            .catch(error => {
+                console.error('Error fetching forecast orders:', error);
+            });
+
+        // Fetch parent vs sub-category data
+        fetch('/parent_subcategory_data/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Debugging output
+                console.log('Parent/Subcategory Data:', data);
+
+                // Ensure we have data to plot
+                if (data.length === 0) {
+                    console.error('No data returned for parent/subcategory data');
+                    return;
+                }
+
+                const parentCategories = data.map(item => item.parent_category_name);
+                const subCategoryCounts = data.map(item => item.sub_category_count);
+                
+                // Plot the parent vs sub-category graph
+                const trace2 = {
+                    x: parentCategories,
+                    y: subCategoryCounts,
+                    type: 'bar',
+                    name: 'Sub-Category Count',
+                };
+                const layout = {
+                    title: 'Parent Category vs Sub-Category Count',
+                    xaxis: {
+                        title: 'Parent Category',
+                    },
+                    yaxis: {
+                        title: 'Number of Sub-Categories',
+                    }
+                };
+                Plotly.newPlot('parent-subcategory-graph', [trace2], layout);
+            })
+            .catch(error => {
+                console.error('Error fetching parent/subcategory data:', error);
+            });
+    </script>
+</body>
+</html>
